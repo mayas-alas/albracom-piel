@@ -1,38 +1,47 @@
 # Albracom
 
-Landing de venta asistida para confort de personas mayores. Sin tienda, decoración, formularios ni app.
+Una landing sencilla para acompañar la compra: **para quién → qué necesita → conversar por WhatsApp**. Sin tienda, registros ni datos de salud.
 
-**Tres acciones:** elegir perfil → elegir necesidad → abrir WhatsApp. Nueve recorridos (3 × 3), con mensaje editable, contexto y referencia anónima por navegador. El cliente pulsa Enviar dentro de WhatsApp; la web no envía automáticamente.
+## ¿Cómo se actualiza la web?
 
-## Ejecutar
+Al guardar cambios en `main`, Cloudflare vuelve a preparar la landing y actualiza **[albracompiel.com](https://albracompiel.com)**. El dominio y `www` siguen atendidos por el Worker.
+
+GitHub Actions también construye una imagen con `Containerfile`, comprueba que funcione y la guarda en `ghcr.io/mayas-alas/albracom-piel`. Si Pages está habilitado, publica además una copia en GitHub Pages. Pages muestra archivos: no ejecuta la imagen.
+
+**La copia de GitHub Pages es pública y no tiene el bloqueo por país de Cloudflare.** No sustituye el dominio de producción. GitHub puede exigir un plan compatible para publicar Pages desde un repositorio privado; no cambiar la privacidad para activarlo.
+
+**Estado de Pages:** el plan actual no lo permite para este repo privado. El flujo está preparado, pero la publicación en Pages permanece desactivada.
+
+## Cambiar el contacto
+
+El número no se escribe en los archivos del proyecto. Se configura como `WHATSAPP_PHONE`, con código de país y sin `+` ni espacios, en dos lugares:
+
+- **Cloudflare:** configuración del Worker → Builds → variable de construcción.
+- **GitHub:** Settings → Secrets and variables → Actions → secreto `WHATSAPP_PHONE`.
+
+Después de cambiarlo, hay que volver a publicar. No hace falta editar la landing. El enlace que abre WhatsApp siempre revela el número al visitante; esta configuración lo mantiene fuera del código, no lo oculta en la web.
+
+## Protección de producción
+
+Cloudflare conserva el plan Free, el bloqueo de IPs fuera de México, la protección DDoS y la redirección a HTTPS. Las URLs alternativas de Workers y preview están cerradas. Para quitar el bloqueo: Security → Security rules → “Solo Mexico” → Disabled.
+
+## Probar en tu equipo
+
+1. Copia `.env.example` a `.env` y completa el contacto. No subas `.env`.
+2. Ejecuta `npm ci` y `npm run dev`.
+3. Prueba las nueve combinaciones y revisa el mensaje antes de enviar. `npm test` comprueba los recorridos y la preparación de archivos.
+
+La referencia del visitante solo reconoce ese navegador. No identifica a una persona ni funciona entre dispositivos. Las ilustraciones fueron creadas con IA; no son fotografías del producto ni avales médicos.
+
+## Imagen y Pages
+
+Con Docker disponible y el contacto en tu entorno:
 
 ```sh
-npm ci
-npm run dev
-npm test
-npm run deploy
+docker build --file Containerfile --secret id=whatsapp_phone,env=WHATSAPP_PHONE --tag albracom .
+docker run --rm -p 8080:8080 albracom
 ```
 
-Cloudflare conecta `mayas-alas/albracom-piel`, rama `main`, comando `npx wrangler deploy`, sin build. `wrangler.jsonc` publica `public/` como Static Assets del Worker `albracom-piel`. No requiere secretos en GitHub ni backend. Comprobar el build después de cada push.
+Pages se activa en Settings → Pages → GitHub Actions y con la variable de Actions `PAGES_ENABLED=true`. Si el plan no lo permite, la imagen se sigue construyendo y el Worker sigue publicando normalmente.
 
-## Dominio y protección Free
-
-- Producción: https://albracompiel.com/ (también `www`). Custom Domains conectados al Worker desde Cloudflare; DNS/certificados administrados allí, sin servidor de origen.
-- Regla WAF activa `Albracom - Solo Mexico`, acción Block: `(http.host in {"albracompiel.com" "www.albracompiel.com"} and ip.src.country ne "MX")`. Incluye IPs desconocidas y rastreadores extranjeros; usa geolocalización de IP, no nacionalidad.
-- Plan Free, 1/5 reglas personalizadas. DDoS automático activo y Always Use HTTPS habilitado (HTTP → HTTPS 301); sin upgrades ni servicios de pago.
-- `workers_dev` y `preview_urls` desactivados en configuración para no exponer una URL alternativa sin la regla de la zona.
-- Reversión del bloqueo: Security → Security rules → Solo Mexico → Disabled. No se requiere cambiar el código.
-
-## Contexto mínimo
-
-El comprador suele ser familiar o cuidador, no necesariamente la persona mayor. Las necesidades cama/sillón/talones orientan una conversación, no un diagnóstico o una prescripción. Solo se nombran los productos no decorativos confirmados por research: zalea y tapete para talones; no se inventa un tercer SKU.
-
-WhatsApp GET: `https://api.whatsapp.com/send?phone=SET_IN_WHATSAPP_PHONE&text=…`. La referencia UUID se guarda en localStorage para reconocer un navegador que regresa, no identificar a una persona. Sin almacenamiento disponible, funciona con referencia temporal. No se guardan ni transmiten selecciones hasta que el usuario abre WhatsApp. Borrar los datos del sitio cambia la referencia; no hay reconocimiento entre dispositivos ni registro central.
-
-Imágenes: ilustraciones SVG originales creadas con IA para este caso de uso; no son fotografías del producto ni evidencia de resultados. Sin dependencias gráficas externas. Los textos de confort no prometen tratar o prevenir lesiones.
-
-Prueba manual: elegir cada combinación de perfil y necesidad, revisar el mensaje visible y comprobar número/texto en el enlace sin enviar. Cambiar una respuesta invalida el contexto anterior.
-
-Verificado localmente: 12 tests unitarios y los 9 recorridos en navegador a 1440px y 390px, incluyendo apertura GET interceptada sin enviar mensajes, regreso, cambio de respuestas, CSP y 404. `wrangler deploy --dry-run` correcto; `npm audit` sin vulnerabilidades al instalar.
-
-Verificado en dominio: HTTPS 200 para raíz/www desde IP geolocalizada MX, los 9 recorridos en escritorio/móvil y URL `workers.dev` cerrada (404). DNS público ya publicado; cachés negativos anteriores pueden tardar en actualizar. La regla geográfica está activa y validada por Cloudflare; no se realizó una solicitud real desde otro país.
+El historial se reescribió para retirar el contacto de las ramas. Los clones anteriores deben descargarse de nuevo. GitHub puede conservar copias antiguas en cachés, registros de publicaciones o referencias internas; eliminarlas por completo puede requerir soporte de GitHub.

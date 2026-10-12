@@ -1,0 +1,79 @@
+name: Construir imagen y publicar Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-main
+  cancel-in-progress: false
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Construir y guardar la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          target: runtime
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          provenance: false
+          secrets: |
+            whatsapp_phone=${{ secrets.WHATSAPP_PHONE }}
+      - name: Comprobar el servidor de la imagen
+        run: |
+          docker run -d --name site-check -p 8080:8080 ghcr.io/${{ github.repository }}:${{ github.sha }}
+          curl --retry 8 --retry-connrefused --retry-delay 2 --fail http://localhost:8080/ -o /dev/null
+          docker stop site-check
+      - name: Preparar los archivos para Pages
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          target: site
+          build-args: SITE_BASE_PATH=/${{ github.event.repository.name }}/
+          outputs: type=local,dest=pages
+          provenance: false
+          secrets: |
+            whatsapp_phone=${{ secrets.WHATSAPP_PHONE }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+  pages:
+    if: vars.PAGES_ENABLED == 'true'
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar Pages
+        uses: actions/configure-pages@v5
+      - name: Publicar Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

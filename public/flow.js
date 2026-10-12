@@ -1,4 +1,3 @@
-export const PHONE = 'SET_IN_WHATSAPP_PHONE';
 export const ROLES = Object.freeze({
   familiar: { label: 'Cuido a un familiar', message: 'Soy familiar de una persona mayor y busco confort para su descanso.' },
   cuidador: { label: 'Soy cuidador/a', message: 'Soy cuidador/a de una persona mayor y busco opciones de confort para su cuidado cotidiano.' },
@@ -10,9 +9,10 @@ export const NEEDS = Object.freeze({
   talones: { label: 'Confort para los talones', product: 'Tapete para talones', message: 'Mi necesidad es confort en la zona de los talones durante el descanso. Quiero información del tapete para talones.' },
 });
 
-export function createContact({ role, need, visitorId, returning = false }) {
+export function createContact({ role, need, visitorId, returning = false, phone }) {
   if (!Object.hasOwn(ROLES, role) || !Object.hasOwn(NEEDS, need)) throw new Error('Elige un perfil y una necesidad válidos.');
   if (!/^[a-zA-Z0-9-]{8,64}$/.test(visitorId)) throw new Error('Referencia inválida.');
+  if (typeof phone !== 'string' || !/^[1-9]\d{7,14}$/.test(phone)) throw new Error('Contacto no configurado.');
   const path = `${role}.${need}.${visitorId}`;
   const text = [
     'Hola, Albracom 👋',
@@ -22,7 +22,7 @@ export function createContact({ role, need, visitorId, returning = false }) {
     `${returning ? 'Vuelvo a consultar' : 'Primera visita'} · Referencia: ${path}`,
   ].join('\n\n');
   const url = new URL('https://api.whatsapp.com/send');
-  url.searchParams.set('phone', PHONE);
+  url.searchParams.set('phone', phone);
   url.searchParams.set('text', text);
   return { text, url: url.href, path };
 }

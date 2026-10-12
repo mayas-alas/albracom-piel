@@ -1,16 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PHONE, ROLES, NEEDS, createContact, recognizeVisitor } from '../public/flow.js';
+import { ROLES, NEEDS, createContact, recognizeVisitor } from '../public/flow.js';
+
+const phone = '15555550123'; // Dato ficticio para pruebas; nunca se envía un mensaje.
 
 const visitorId = '53c8d80e-5baf-40d6-b592-f11ed872e2c9';
 for (const role of Object.keys(ROLES)) {
   for (const need of Object.keys(NEEDS)) {
     test(`Recorrido ${role} → ${need} → WhatsApp`, () => {
-      const contact = createContact({ role, need, visitorId });
+      const contact = createContact({ role, need, visitorId, phone });
       const url = new URL(contact.url);
       assert.equal(url.origin, 'https://api.whatsapp.com');
       assert.equal(url.pathname, '/send');
-      assert.equal(url.searchParams.get('phone'), PHONE);
+      assert.equal(url.searchParams.get('phone'), phone);
       assert.equal(url.searchParams.get('text'), contact.text);
       assert.ok(contact.text.includes(ROLES[role].message));
       assert.ok(contact.text.includes(NEEDS[need].message));
@@ -25,7 +27,7 @@ test('Regreso conserva referencia, sin guardar respuestas', () => {
   assert.deepEqual(recognizeVisitor(storage, () => visitorId), { visitorId, returning: false });
   assert.deepEqual(recognizeVisitor(storage), { visitorId, returning: true });
   assert.equal(data.size, 1);
-  assert.ok(createContact({ role: 'personal', need: 'talones', visitorId, returning: true }).text.includes('Vuelvo a consultar'));
+  assert.ok(createContact({ role: 'personal', need: 'talones', visitorId, returning: true, phone }).text.includes('Vuelvo a consultar'));
 });
 test('Storage bloqueado y valor corrupto no bloquean la compra', () => {
   assert.equal(recognizeVisitor(null, () => visitorId).visitorId, visitorId);
@@ -34,8 +36,13 @@ test('Storage bloqueado y valor corrupto no bloquean la compra', () => {
 });
 test('No permite contextos incompletos o claves heredadas', () => {
   for (const role of ['', null, 'constructor', '__proto__']) {
-    assert.throws(() => createContact({ role, need: 'cama', visitorId }));
+    assert.throws(() => createContact({ role, need: 'cama', visitorId, phone }));
   }
-  assert.throws(() => createContact({ role: 'familiar', need: '', visitorId }));
-  assert.throws(() => createContact({ role: 'familiar', need: 'cama', visitorId: 'invalido!' }));
+  assert.throws(() => createContact({ role: 'familiar', need: '', visitorId, phone }));
+  assert.throws(() => createContact({ role: 'familiar', need: 'cama', visitorId: 'invalido!', phone }));
+});
+test('Rechaza contacto ausente o mal formado', () => {
+  for (const value of [undefined, '', '0', '+123456789', '123<script>']) {
+    assert.throws(() => createContact({ role: 'familiar', need: 'cama', visitorId, phone: value }));
+  }
 });

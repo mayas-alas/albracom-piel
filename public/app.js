@@ -1,4 +1,5 @@
 import { ROLES, NEEDS, createContact, recognizeVisitor } from './flow.js';
+import { PHONE } from './config.js';
 
 // Reading storage itself can throw in privacy-restricted browsers.
 let storage;
@@ -39,7 +40,7 @@ for (const button of document.querySelectorAll('[data-role]')) {
 for (const button of document.querySelectorAll('[data-need]')) {
   button.addEventListener('click', () => {
     need = button.dataset.need;
-    const contact = createContact({ role, need, ...visitor });
+    const contact = createContact({ role, need, ...visitor, phone: PHONE });
     contactLink.href = contact.url;
     document.querySelector('#selection').textContent = `${ROLES[role].label} · ${NEEDS[need].label}`;
     document.querySelector('#product').textContent = NEEDS[need].product;

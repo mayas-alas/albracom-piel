@@ -4,8 +4,11 @@
   "compatibility_date": "2026-10-12",
   "workers_dev": false,
   "preview_urls": false,
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
-    "directory": "./public",
+    "directory": "./dist",
     "not_found_handling": "404-page"
   }
 }
