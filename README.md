@@ -19,7 +19,7 @@ Cloudflare conecta `mayas-alas/albracom-piel`, rama `main`, comando `npx wrangle
 
 - Producción: https://albracompiel.com/ (también `www`). Custom Domains conectados al Worker desde Cloudflare; DNS/certificados administrados allí, sin servidor de origen.
 - Regla WAF activa `Albracom - Solo Mexico`, acción Block: `(http.host in {"albracompiel.com" "www.albracompiel.com"} and ip.src.country ne "MX")`. Incluye IPs desconocidas y rastreadores extranjeros; usa geolocalización de IP, no nacionalidad.
-- Plan Free, 1/5 reglas personalizadas. DDoS automático activo; sin upgrades ni servicios de pago.
+- Plan Free, 1/5 reglas personalizadas. DDoS automático activo y Always Use HTTPS habilitado (HTTP → HTTPS 301); sin upgrades ni servicios de pago.
 - `workers_dev` y `preview_urls` desactivados en configuración para no exponer una URL alternativa sin la regla de la zona.
 - Reversión del bloqueo: Security → Security rules → Solo Mexico → Disabled. No se requiere cambiar el código.
 
@@ -34,3 +34,5 @@ Imágenes: ilustraciones SVG originales creadas con IA para este caso de uso; no
 Prueba manual: elegir cada combinación de perfil y necesidad, revisar el mensaje visible y comprobar número/texto en el enlace sin enviar. Cambiar una respuesta invalida el contexto anterior.
 
 Verificado localmente: 12 tests unitarios y los 9 recorridos en navegador a 1440px y 390px, incluyendo apertura GET interceptada sin enviar mensajes, regreso, cambio de respuestas, CSP y 404. `wrangler deploy --dry-run` correcto; `npm audit` sin vulnerabilidades al instalar.
+
+Verificado en dominio: HTTPS 200 para raíz/www desde IP geolocalizada MX, los 9 recorridos en escritorio/móvil y URL `workers.dev` cerrada (404). DNS público ya publicado; cachés negativos anteriores pueden tardar en actualizar. La regla geográfica está activa y validada por Cloudflare; no se realizó una solicitud real desde otro país.
