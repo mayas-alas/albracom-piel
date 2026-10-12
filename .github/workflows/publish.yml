@@ -34,16 +34,17 @@ jobs:
           target: runtime
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}-landing:latest
+            ghcr.io/${{ github.repository }}-landing:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           provenance: false
           secrets: |
             whatsapp_phone=${{ secrets.WHATSAPP_PHONE }}
       - name: Comprobar el servidor de la imagen
         run: |
-          docker run -d --name site-check -p 8080:8080 ghcr.io/${{ github.repository }}:${{ github.sha }}
-          curl --retry 8 --retry-connrefused --retry-delay 2 --fail http://localhost:8080/ -o /dev/null
-          docker stop site-check
+          docker run -d --name site-check -p 8080:8080 ghcr.io/${{ github.repository }}-landing:${{ github.sha }}
+          trap 'docker rm -f site-check >/dev/null' EXIT
+          curl --retry 8 --retry-all-errors --retry-delay 2 --max-time 10 --fail http://localhost:8080/ -o /dev/null || { docker logs site-check; exit 1; }
       - name: Preparar los archivos para Pages
         uses: docker/build-push-action@v6
         with:

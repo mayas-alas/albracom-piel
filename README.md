@@ -6,11 +6,9 @@ Una landing sencilla para acompañar la compra: **para quién → qué necesita 
 
 Al guardar cambios en `main`, Cloudflare vuelve a preparar la landing y actualiza **[albracompiel.com](https://albracompiel.com)**. El dominio y `www` siguen atendidos por el Worker.
 
-GitHub Actions también construye una imagen con `Containerfile`, comprueba que funcione y la guarda en `ghcr.io/mayas-alas/albracom-piel`. Si Pages está habilitado, publica además una copia en GitHub Pages. Pages muestra archivos: no ejecuta la imagen.
+GitHub Actions también construye una imagen con `Containerfile`, comprueba que funcione y la guarda en `ghcr.io/mayas-alas/albracom-piel-landing`. Publica además una copia en GitHub Pages. Pages muestra archivos: no ejecuta la imagen.
 
-**La copia de GitHub Pages es pública y no tiene el bloqueo por país de Cloudflare.** No sustituye el dominio de producción. GitHub puede exigir un plan compatible para publicar Pages desde un repositorio privado; no cambiar la privacidad para activarlo.
-
-**Estado de Pages:** el plan actual no lo permite para este repo privado. El flujo está preparado, pero la publicación en Pages permanece desactivada.
+**La copia de GitHub Pages es pública y no tiene el bloqueo por país de Cloudflare.** No sustituye el dominio de producción. Este repo público se creó de nuevo, con autorización del propietario, para publicar Pages sin exponer el contacto en versiones antiguas del código.
 
 ## Cambiar el contacto
 
@@ -42,6 +40,6 @@ docker build --file Containerfile --secret id=whatsapp_phone,env=WHATSAPP_PHONE 
 docker run --rm -p 8080:8080 albracom
 ```
 
-Pages se activa en Settings → Pages → GitHub Actions y con la variable de Actions `PAGES_ENABLED=true`. Si el plan no lo permite, la imagen se sigue construyendo y el Worker sigue publicando normalmente.
+Pages usa Settings → Pages → GitHub Actions y la variable de Actions `PAGES_ENABLED=true`. Su dirección es https://mayas-alas.github.io/albracom-piel/.
 
-El historial se reescribió para retirar el contacto de las ramas. Los clones anteriores deben descargarse de nuevo. GitHub puede conservar copias antiguas en cachés, registros de publicaciones o referencias internas; eliminarlas por completo puede requerir soporte de GitHub.
+El número se retiró de todas las versiones del código que contiene este repo nuevo. El repo anterior se conserva privado como `albracom-piel-privado`, porque GitHub todavía guardaba copias antiguas allí. Los clones anteriores deben descargarse de nuevo; no mezclar su historial con este repo público.
