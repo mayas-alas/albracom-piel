@@ -13,7 +13,15 @@ npm test
 npm run deploy
 ```
 
-Cloudflare ya conecta `mayas-alas/albracom-piel`, rama `main`, comando `npx wrangler deploy`, sin build. `wrangler.jsonc` publica `public/` como Static Assets del Worker `albracom-piel`. No requiere secretos en GitHub ni backend. No altera DNS/rutas. Comprobar el build de Cloudflare después de cada push.
+Cloudflare conecta `mayas-alas/albracom-piel`, rama `main`, comando `npx wrangler deploy`, sin build. `wrangler.jsonc` publica `public/` como Static Assets del Worker `albracom-piel`. No requiere secretos en GitHub ni backend. Comprobar el build después de cada push.
+
+## Dominio y protección Free
+
+- Producción: https://albracompiel.com/ (también `www`). Custom Domains conectados al Worker desde Cloudflare; DNS/certificados administrados allí, sin servidor de origen.
+- Regla WAF activa `Albracom - Solo Mexico`, acción Block: `(http.host in {"albracompiel.com" "www.albracompiel.com"} and ip.src.country ne "MX")`. Incluye IPs desconocidas y rastreadores extranjeros; usa geolocalización de IP, no nacionalidad.
+- Plan Free, 1/5 reglas personalizadas. DDoS automático activo; sin upgrades ni servicios de pago.
+- `workers_dev` y `preview_urls` desactivados en configuración para no exponer una URL alternativa sin la regla de la zona.
+- Reversión del bloqueo: Security → Security rules → Solo Mexico → Disabled. No se requiere cambiar el código.
 
 ## Contexto mínimo
 
