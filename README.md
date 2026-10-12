@@ -1,19 +1,28 @@
-# Albracom Piel — contexto y auditoría de negocio
+# Albracom
 
-Reestructuración de marca y adquisición con enfoque en bienestar de personas mayores. **Primera fase: auditoría y definición de una landing; no una aplicación.**
+Landing de venta asistida para confort de personas mayores. Sin tienda, decoración, formularios ni app.
 
-## Tesis
+**Tres acciones:** elegir perfil → elegir necesidad → abrir WhatsApp. Nueve recorridos (3 × 3), con mensaje editable, contexto y referencia anónima por navegador. El cliente pulsa Enviar dentro de WhatsApp; la web no envía automáticamente.
 
-La persona mayor usa el producto; su familiar o cuidador suele decidir y comprar. Albracom debe ayudar a quien cuida a elegir con confianza una zalea de borrego para el confort cotidiano, sin convertir tradición o propiedades generales de la lana en promesas clínicas no demostradas.
+## Ejecutar
 
-## Documentación
+```sh
+npm ci
+npm run dev
+npm test
+npm run deploy
+```
 
-- [Auditoría 360 de negocio](docs/AUDITORIA-NEGOCIO.md): diagnóstico, segmentos, oferta, economía y validación.
-- [Contexto del proyecto](docs/CONTEXTO-PROYECTO.md): hechos, hipótesis, alcance y preguntas pendientes.
-- [Brief de la landing](docs/BRIEF-LANDING.md): narrativa, estructura, conversión y criterios de aceptación.
-- [Infraestructura y deploy](docs/INFRAESTRUCTURA.md): GitHub, Cloudflare y hallazgos técnicos.
-- [Fuentes y observaciones](docs/FUENTES.md): evidencia consultada y límites de la auditoría.
+Cloudflare ya conecta `mayas-alas/albracom-piel`, rama `main`, comando `npx wrangler deploy`, sin build. `wrangler.jsonc` publica `public/` como Static Assets del Worker `albracom-piel`. No requiere secretos en GitHub ni backend. No altera DNS/rutas. Comprobar el build de Cloudflare después de cada push.
 
-## Estado
+## Contexto mínimo
 
-Documentación inicial basada en el brief del usuario, la preview pública, la tienda existente y el dashboard autorizado de Cloudflare. No incluye código de landing, configuración de Wrangler ni cambios a la tienda o al Worker activo. Las propuestas requieren aprobación y los datos comerciales requieren confirmación del negocio.
+El comprador suele ser familiar o cuidador, no necesariamente la persona mayor. Las necesidades cama/sillón/talones orientan una conversación, no un diagnóstico o una prescripción. Solo se nombran los productos no decorativos confirmados por research: zalea y tapete para talones; no se inventa un tercer SKU.
+
+WhatsApp GET: `https://api.whatsapp.com/send?phone=SET_IN_WHATSAPP_PHONE&text=…`. La referencia UUID se guarda en localStorage para reconocer un navegador que regresa, no identificar a una persona. Sin almacenamiento disponible, funciona con referencia temporal. No se guardan ni transmiten selecciones hasta que el usuario abre WhatsApp. Borrar los datos del sitio cambia la referencia; no hay reconocimiento entre dispositivos ni registro central.
+
+Imágenes: ilustraciones SVG originales creadas con IA para este caso de uso; no son fotografías del producto ni evidencia de resultados. Sin dependencias gráficas externas. Los textos de confort no prometen tratar o prevenir lesiones.
+
+Prueba manual: elegir cada combinación de perfil y necesidad, revisar el mensaje visible y comprobar número/texto en el enlace sin enviar. Cambiar una respuesta invalida el contexto anterior.
+
+Verificado localmente: 12 tests unitarios y los 9 recorridos en navegador a 1440px y 390px, incluyendo apertura GET interceptada sin enviar mensajes, regreso, cambio de respuestas, CSP y 404. `wrangler deploy --dry-run` correcto; `npm audit` sin vulnerabilidades al instalar.
